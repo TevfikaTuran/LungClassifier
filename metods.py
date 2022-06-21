@@ -8,7 +8,7 @@ from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
 from matplotlib import pyplot as plt
 import numpy as np
-import skimage.measure
+from skimage import measure, color
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -20,7 +20,6 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 def readImages(path,  IMG_HEIGHT = 128, IMG_WIDTH = 128, is_gray=0):
     cv2_image = cv2.imread(path, is_gray)
-    print(path)
     cv2_image = cv2.resize(cv2_image, (IMG_HEIGHT, IMG_WIDTH))
     cv2.imwrite('img.jpg', cv2_image)
     
@@ -40,10 +39,10 @@ def fillHoles(pred_img):
 
 
 def removeSmallObjects(img, min_area = 200):
-    labeled_image, _ = skimage.measure.label(img, connectivity=2, return_num=True)
+    labeled_image, _ = measure.label(img, connectivity=2, return_num=True)
     
     # compute object features and extract object areas
-    object_features = skimage.measure.regionprops(labeled_image)
+    object_features = measure.regionprops(labeled_image)
     object_areas = [objf["area"] for objf in object_features]
     object_areas
     
@@ -58,7 +57,7 @@ def removeSmallObjects(img, min_area = 200):
         if objf["area"] < min_area:
             labeled_image[labeled_image == objf["label"]] = 0
     
-    colored_label_image = skimage.color.label2rgb(labeled_image, bg_label=0)
+    colored_label_image = color.label2rgb(labeled_image, bg_label=0)
     
     colorChannel1 = colored_label_image[:,:,0]
     colorChannel2 = colored_label_image[:,:,2]
