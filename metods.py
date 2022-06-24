@@ -7,8 +7,8 @@ from tensorflow.keras.optimizers import *
 from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
 from matplotlib import pyplot as plt
-import numpy as np
 from skimage import measure, color
+import numpy as np
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -43,25 +43,23 @@ def removeSmallObjects(img, min_area = 200):
     
     # compute object features and extract object areas
     object_features = measure.regionprops(labeled_image)
+    
+    if len(object_features) < 2:
+        return None
+    
     object_areas = [objf["area"] for objf in object_features]
-    object_areas
+    object_areas = sorted(object_areas, reverse=True)[0:2]
     
-    min_area = min_area
-    large_objects = []
-    for objf in object_features:
-        if objf["area"] > min_area:
-            large_objects.append(objf["label"])
-    # print("Found", len(large_objects), "objects!")
-    
-    for _, objf in enumerate(object_features, start=1):
-        if objf["area"] < min_area:
-            labeled_image[labeled_image == objf["label"]] = 0
-    
+    for part in object_features:
+        if (part["area"] != object_areas[0]) and (part["area"] != object_areas[1]):
+            labeled_image[labeled_image == part["label"]] = 0
+            
     colored_label_image = color.label2rgb(labeled_image, bg_label=0)
     
     colorChannel1 = colored_label_image[:,:,0]
     colorChannel2 = colored_label_image[:,:,2]
     combinedChannels = colorChannel1 + colorChannel2
+    
     return combinedChannels
 
 
@@ -76,7 +74,7 @@ def showRandomPredict(images, masks, predicts, sample_count, if_predicted= False
         plt.imshow(random_img, cmap=plt.cm.bone)
         plt.axis('off')
         plt.title('Lung X-Ray')
-
+        
         plt.subplot(5,4,i + 2)
         random_mask = masks[img_index,:,:]
         random_mask = cv2.resize(random_mask, img_size)
@@ -91,11 +89,9 @@ def showRandomPredict(images, masks, predicts, sample_count, if_predicted= False
         plt.imshow(random_pred, cmap='gray')
         plt.axis('off')
         plt.title('Predicted Mask')
-
+        
         plt.subplot(5,4,i + 4)
         plt.imshow(cv2.bitwise_and(images[img_index,:,:], images[img_index,:,:], mask=random_pred.astype(np.uint8)), cmap=plt.cm.bone)
         plt.axis('off')
         plt.title('Predicted Lung Segmentation')
     plt.show()
-    
-    
