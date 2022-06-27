@@ -13,11 +13,6 @@ import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
 
-import tensorflow as tf
-physical_devices = tf.config.list_physical_devices('GPU') 
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
-
 def readImages(path,  IMG_HEIGHT = 128, IMG_WIDTH = 128, is_gray=0):
     cv2_image = cv2.imread(path, is_gray)
     cv2_image = cv2.resize(cv2_image, (IMG_HEIGHT, IMG_WIDTH))

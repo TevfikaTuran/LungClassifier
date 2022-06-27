@@ -35,7 +35,7 @@ def maskImage(file_path):
     
     image.imsave("cache\\" + new_file_name, img, cmap=plt.cm.gray)
     
-    img = readImages("cache\\" + "resized_" + new_file_name, 300, 300, 0)
+    img = readImages("cache\\" + new_file_name, 500, 500, 0)
     image.imsave("cache\\" + "resized_" + new_file_name, img, cmap=plt.cm.bone)
     return ("cache\\" + new_file_name), ("cache\\" + "resized_" + new_file_name)
 
@@ -46,7 +46,7 @@ def segmentImage(lung_path, mask_path):
     img = readImages(lung_path,  IMG_HEIGHT = 128, IMG_WIDTH = 128, is_gray=0)
     segmented_img = cv2.bitwise_and(img, img, mask=mask)
     image.imsave("cache\\" + save_file_name, segmented_img, cmap=plt.cm.bone)
-    img = readImages("cache\\" + "resized_" + save_file_name, 300, 300, 0)
+    img = readImages("cache\\" + save_file_name, 500, 500, 0)
     image.imsave("cache\\" + "resized_" + save_file_name, img, cmap=plt.cm.bone)
     return ("cache\\" + save_file_name), ("cache\\" + "resized_" + save_file_name)
 
@@ -73,6 +73,7 @@ class App:
         # setting window size
         width = 592
         height = 661
+        
         screenwidth = root.winfo_screenwidth()
         screenheight = root.winfo_screenheight()
         alignstr = '%dx%d+%d+%d' % (width, height,
@@ -85,19 +86,27 @@ class App:
         GLabel_891["font"] = ft
         GLabel_891["fg"] = "#333333"
         GLabel_891["justify"] = "center"
-        GLabel_891["text"] = "label"
+        GLabel_891["text"] = ""
         GLabel_891.place(x=0, y=0, width=591, height=622)
         self.label = GLabel_891
-
-        GButton_211 = tk.Button(root)
-        GButton_211["bg"] = "#efefef"
+        
+        GLabel_892 = tk.Label(root)
         ft = tkFont.Font(family='Times', size=10)
-        GButton_211["font"] = ft
-        GButton_211["fg"] = "#000000"
-        GButton_211["justify"] = "center"
-        GButton_211["text"] = "Next"
-        GButton_211.place(x=510, y=630, width=70, height=25)
-        GButton_211["command"] = self.GButton_211_command
+        GLabel_892["font"] = ft
+        GLabel_892["fg"] = "#333333"
+        GLabel_892["justify"] = "center"
+        GLabel_892["text"] = "Yüklenen görsel tipi: Görsel bekleniyor..."
+        GLabel_892.place(x=150, y=40, width=300, height=20)
+        self.label2 = GLabel_892
+        
+        GLabel_893 = tk.Label(root)
+        ft = tkFont.Font(family='Times', size=10)
+        GLabel_893["font"] = ft
+        GLabel_893["fg"] = "#333333"
+        GLabel_893["justify"] = "center"
+        GLabel_893["text"] = "Hastalık tipi: Görsel bekleniyor..."
+        GLabel_893.place(x=150, y=570, width=300, height=20)
+        self.label3 = GLabel_893
 
         GButton_665 = tk.Button(root)
         GButton_665["bg"] = "#efefef"
@@ -106,7 +115,7 @@ class App:
         GButton_665["fg"] = "#000000"
         GButton_665["justify"] = "center"
         GButton_665["text"] = "Dosya Seç"
-        GButton_665.place(x=10, y=630, width=70, height=25)
+        GButton_665.place(x=260, y=630, width=70, height=25)
         GButton_665["command"] = self.GButton_665_command
 
         GButton_207 = tk.Button(root)
@@ -115,8 +124,8 @@ class App:
         GButton_207["font"] = ft
         GButton_207["fg"] = "#000000"
         GButton_207["justify"] = "center"
-        GButton_207["text"] = "Download"
-        GButton_207.place(x=100, y=630, width=70, height=25)
+        GButton_207["text"] = "Geri"
+        GButton_207.place(x=100, y=600, width=70, height=25)
         GButton_207["command"] = self.GButton_207_command
 
         GButton_162 = tk.Button(root)
@@ -125,59 +134,83 @@ class App:
         GButton_162["font"] = ft
         GButton_162["fg"] = "#000000"
         GButton_162["justify"] = "center"
-        GButton_162["text"] = "Deny"
-        GButton_162.place(x=420, y=630, width=70, height=25)
+        GButton_162["text"] = "İleri"
+        GButton_162.place(x=420, y=600, width=70, height=25)
         GButton_162["command"] = self.GButton_162_command
 
-        GLineEdit_685 = tk.Entry(root)
-        GLineEdit_685["borderwidth"] = "1px"
-        ft = tkFont.Font(family='Times', size=10)
-        GLineEdit_685["font"] = ft
-        GLineEdit_685["fg"] = "#333333"
-        GLineEdit_685["justify"] = "center"
-        GLineEdit_685["text"] = ""
-        GLineEdit_685.place(x=210, y=630, width=170, height=25)
-        self.textbox = GLineEdit_685
-
-    def GButton_211_command(self):
-        code = next_code(self.textbox.get().replace('https://prnt.sc/', ''))
-        self.textbox.delete("0", tk.END)
-        self.textbox.insert("0", "https://prnt.sc/" + code)
-        print(code)
-
-        url = get_img_url(code)
-
-        img_path = get_img(url)
-
-        self.img = tk.PhotoImage(file=img_path)
-        self.label.configure(image=self.img)
-        self.label.image = self.img
 
     #Dosya seçim işlemleri
     def GButton_665_command(self):
         file_path = selectFileDialog()
+        img = readImages(file_path, 500, 500, 0)
+        image.imsave("cache\\" + "orig.png", img, cmap=plt.cm.gray)
         
+        self.original_img = "cache\\" + "orig.png"
+        
+        self.selection = "segment"
         masked_image_path, resized_masked = maskImage(file_path)
-        masked_image = Image.open(masked_image_path)
-        
+        self.mask = resized_masked
+
         segmented_image_path, resized_segmented = segmentImage(file_path, masked_image_path)
         segmented_image = Image.open(segmented_image_path)
-
-        predicted_type = predictImage(segmented_image_path)
+        self.segment = resized_segmented
         
-        self.textbox.delete("0", tk.END)
-        self.textbox.insert("0", f"Tahmin edilen tip: {predicted_type}")
+        predicted_type = predictImage(segmented_image_path)
+        if predicted_type == 0: predicted_type = "Sağlıklı" 
+        else: predicted_type = "Pnömotoraks"
+        self.label3['text'] = f"Tahmin Edilen Tanı: {predicted_type}"
+        
+        self.label2['text'] = f"Yüklenen görsel tipi: Segment"
 
         self.img = tk.PhotoImage(file=resized_segmented)
         self.label.configure(image=self.img)
         self.label.image = self.img
 
     def GButton_207_command(self):
-        print("command")
+        if self.selection == "mask":
+            self.selection = "orig"
+            self.img = tk.PhotoImage(file=self.original_img)
+            self.label.configure(image=self.img)
+            self.label.image = self.img
+            self.label2['text'] = "Yüklenen görsel tipi: Orijinal"
+            return
+        if self.selection == "segment":
+            self.selection = "mask"
+            self.img = tk.PhotoImage(file=self.mask)
+            self.label.configure(image=self.img)
+            self.label.image = self.img
+            self.label2['text'] = "Yüklenen görsel tipi: Maske"
+            return
+        if self.selection == "orig":
+            self.selection = "segment"
+            self.img = tk.PhotoImage(file=self.segment)
+            self.label.configure(image=self.img)
+            self.label.image = self.img
+            self.label2['text'] = "Yüklenen görsel tipi: Segment"
+            return
 
     def GButton_162_command(self):
-        print("command")
-        
+        if self.selection == "mask":
+            self.selection = "segment"
+            self.img = tk.PhotoImage(file=self.segment)
+            self.label.configure(image=self.img)
+            self.label.image = self.img
+            self.label2['text'] = "Yüklenen görsel tipi: Segment"
+            return
+        if self.selection == "segment":
+            self.selection = "orig"
+            self.img = tk.PhotoImage(file=self.original_img)
+            self.label.configure(image=self.img)
+            self.label.image = self.img
+            self.label2['text'] = "Yüklenen görsel tipi: Orijinal"
+            return
+        if self.selection == "orig":
+            self.selection = "mask"
+            self.img = tk.PhotoImage(file=self.mask)
+            self.label.configure(image=self.img)
+            self.label.image = self.img
+            self.label2['text'] = "Yüklenen görsel tipi: Maske"
+            return
 
 if __name__ == "__main__":
     root = tk.Tk()
